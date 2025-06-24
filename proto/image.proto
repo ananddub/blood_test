@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package image;
+
+service ImageService {
+  rpc GetSignedUploadUrl (GetSignedUploadUrlRequest) returns (SignedUrlResponse);
+  rpc ConfirmImageUpload (ConfirmImageUploadRequest) returns (UploadImageResponse);
+  rpc GetImage (GetImageRequest) returns (GetImageResponse);
+  rpc DeleteImage (DeleteImageRequest) returns (DeleteImageResponse);
+}
+
+message GetSignedUploadUrlRequest {
+  string file_name = 1;
+  string mime_type = 2;
+  string entity_type = 3;
+  int32 entity_id = 4;
+}
+
+message SignedUrlResponse {
+  string upload_url = 1;
+  string image_id = 2;
+  int64 expires_at = 3;
+}
+
+message ConfirmImageUploadRequest {
+  string image_id = 1;
+}
+
+message UploadImageResponse {
+  string image_id = 1;
+  string url = 2;
+}
+
+message GetImageRequest {
+  string image_id = 1;
+}
+
+message GetImageResponse {
+  string image_id = 1;
+  string url = 2;
+  string file_name = 3;
+  string mime_type = 4;
+  string entity_type = 5;
+  int32 entity_id = 6;
+  int64 created_at = 7;
+}
+
+message DeleteImageRequest {
+  string image_id = 1;
+}
+
+message DeleteImageResponse {
+  bool success = 1;
+}

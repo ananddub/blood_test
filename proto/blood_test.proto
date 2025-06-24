@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package bloodtest;
+
+service BloodTestService {
+  rpc BookTest (BookTestRequest) returns (BookTestResponse);
+  rpc GetTestDetails (GetTestDetailsRequest) returns (TestDetails);
+  rpc UpdateTestStatus (UpdateTestStatusRequest) returns (UpdateTestStatusResponse);
+  rpc AssignDeliveryAgent (AssignDeliveryAgentRequest) returns (AssignDeliveryAgentResponse);
+  rpc SubscribeToTestUpdates (TestSubscriptionRequest) returns (stream TestStatusUpdate);
+
+
+  rpc StreamUserTests (StreamUserTestsRequest) returns (stream TestSummary);
+  rpc WatchTestUpdates (WatchTestUpdatesRequest) returns (stream TestUpdateEvent);
+  rpc StreamLabTests (StreamLabTestsRequest) returns (stream TestSummary);
+  rpc StreamAgentAssignments (StreamAgentAssignmentsRequest) returns (stream TestAssignment);
+}
+
+
+message TestSummary {
+  int32 id = 1;
+  string test_type = 2;
+  string status = 3;
+  string booking_date = 4;
+  int32 lab_id = 5;
+  string lab_name = 6;
+  int32 patient_id = 7;
+  string patient_name = 8;
+  optional int32 delivery_agent_id = 9;
+}
+
+message StreamUserTestsRequest {
+  int32 user_id = 1;
+  optional string status = 2;
+}
+
+message WatchTestUpdatesRequest {
+  optional int32 test_id = 1;
+  optional int32 user_id = 2;
+  optional int32 lab_id = 3;
+}
+
+message TestUpdateEvent {
+  enum EventType {
+    BOOKED = 0;
+    STATUS_UPDATED = 1;
+    AGENT_ASSIGNED = 2;
+    COMPLETED = 3;
+    CANCELLED = 4;
+  }
+
+  EventType event_type = 1;
+  TestSummary test = 2;
+  string previous_status = 3;
+  int64 timestamp = 4;
+}
+
+message StreamLabTestsRequest {
+  int32 lab_id = 1;
+  optional string status = 2;
+  optional string date_range = 3;
+}
+
+message StreamAgentAssignmentsRequest {
+  int32 agent_id = 1;
+  optional string status = 2;
+  optional string date = 3;
+}
+
+message TestAssignment {
+  int32 test_id = 1;
+  string test_type = 2;
+  string status = 3;
+  string collection_address = 4;
+  Coordinates collection_coordinates = 5;
+  string booking_date = 6;
+  int32 patient_id = 7;
+  string patient_name = 8;
+  int32 lab_id = 9;
+  string lab_name = 10;
+}
+
+message Coordinates {
+  double lat = 1;
+  double lon = 2;
+}
+
+message BookTestResponse {
+  int32 id = 1;
+  int32 lab_id = 2;
+  string test_type = 3;
+  string status = 4;
+  string booking_date = 5;
+}
+
+message GetTestDetailsRequest {
+  int32 id = 1;
+}
+
+message TestDetails {
+  int32 id = 1;
+  PatientInfo patient = 2;
+  LabInfo lab = 3;
+  DeliveryAgentInfo delivery_agent = 4;
+  string test_type = 5;
+  string status = 6;
+  string booking_date = 7;
+  optional string collection_date = 8;
+  string collection_address = 9;
+  optional string delivery_date = 10;
+  optional string processed_date = 11;
+}
+
+message PatientInfo {
+  int32 id = 1;
+  string name = 2;
+}
+
+message LabInfo {
+  int32 id = 1;
+  string name = 2;
+}
+
+message DeliveryAgentInfo {
+  int32 id = 1;
+  string name = 2;
+}
+
+message UpdateTestStatusRequest {
+  int32 id = 1;
+  string status = 2;
+  optional string collection_date = 3;
+  optional string delivery_date = 4;
+  optional string processed_date = 5;
+}
+
+message UpdateTestStatusResponse {
+  int32 id = 1;
+  string status = 2;
+}
+
+message AssignDeliveryAgentRequest {
+  int32 id = 1;
+  int32 delivery_agent_id = 2;
+}
+
+message AssignDeliveryAgentResponse {
+  int32 id = 1;
+  int32 delivery_agent_id = 2;
+}
+
+message TestSubscriptionRequest {
+  int32 test_id = 1;
+  int32 user_id = 2;
+}
+
+message TestStatusUpdate {
+  int32 test_id = 1;
+  string previous_status = 2;
+  string new_status = 3;
+  string message = 4;
+  int64 timestamp = 5;
+}
+
+message BookTestRequest {
+  int32 user_id = 1;
+  int32 lab_id = 2;
+  string test_type = 3;
+  string booking_date = 4;
+  string collection_address = 5;
+  Coordinates collection_coordinates = 6;
+  optional string notes = 7;
+}

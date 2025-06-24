@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package common;
+
+message Coordinates {
+  double lat = 1;
+  double lon = 2;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+}
+
+message Empty {}
+
+message Status {
+  int32 code = 1;
+  string message = 2;
+}

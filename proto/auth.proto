@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "authpb";
+option java_package = "com.example.auth";
+
+// ---------- Enums ----------
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  PATIENT = 1;
+  DOCTOR = 2;
+  WORKER = 3;
+  ADMIN = 4;
+}
+
+// ---------- User DTOs ----------
+
+message UserDto {
+  string id = 1;
+  string phone = 2;
+  string name = 3;
+  Role role = 4;
+  string language = 5;
+  string address = 6;
+  string coordinates = 7; // JSON as string
+  string createdAt = 8;
+  string updatedAt = 9;
+  bool isActive = 10;
+  bool isVerified = 11;
+  string phoneCode = 12;
+  string lastLogin = 13;
+  int32 loyaltyPoints = 14;
+  string referralCode = 15;
+  string referredBy = 16;
+  UserRefDto referredFrom = 17;
+  string labId = 20;
+}
+
+// Reference DTO to avoid recursion
+message UserRefDto {
+  string id = 1;
+  optional string name = 2;
+  optional string phone = 3;
+  optional string referralCode = 4;
+}
+
+
+// ---------- Auth DTOs ----------
+
+message TokenPair {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
+}
+
+message AuthResponse {
+  UserDto user = 1;
+  TokenPair tokens = 2;
+}
+
+// ---------- Request DTOs ----------
+
+message CreateUserDto {
+  string name = 1;
+  string phone = 2;
+  optional Role role = 3;
+  optional string language = 4;
+  optional string address = 5;
+  optional string phoneCode = 6;
+  optional string referralCode = 7;
+  optional string referredBy = 8;
+  optional string coordinates = 9;
+}
+
+message UpdateUserDto {
+  string id = 1;
+  optional string name = 2;
+  optional string phone = 3;
+  optional Role role = 4;
+  optional string language = 5;
+  optional string address = 6;
+  optional string phoneCode = 7;
+  optional string referralCode = 8;
+  optional string referredBy = 9;
+  optional string coordinates = 10;
+  optional bool isActive = 11;
+  optional bool isVerified = 12;
+  optional int32 loyaltyPoints = 13;
+}
+
+message GetUserDto {
+  string id = 1;
+}
+
+message DeleteUserDto {
+  string id = 1;
+}
+
+message UserList {
+  repeated UserDto users = 1;
+}
+
+message Empty {}
+
+message LoginUserDto {
+  string phone = 1;
+}
+
+message LogoutUserDto {
+  string id = 1;
+}
+
+message VerifyOtpDto {
+  string phone = 1;
+  string otp = 2;
+}
+
+message RefreshTokenDto {
+  string refreshToken = 1;
+}
+
+// ---------- Services ----------
+message ResponseUserDto {
+  int32   code = 1;
+  string message = 2;
+  optional UserDto data = 3;
+}
+
+message ResponseUserList {
+  int32   code = 1;
+  string message = 2;
+  repeated UserDto data = 3;
+}
+
+service UserService {
+  rpc create(CreateUserDto) returns (ResponseUserDto);
+  rpc update(UpdateUserDto) returns (ResponseUserDto);
+  rpc findOne(GetUserDto) returns (ResponseUserDto);
+  rpc findAll(Empty) returns (ResponseUserList);
+  rpc remove(DeleteUserDto) returns (ResponseUserDto);
+}
+
+
+// Auth Service
+message LoginResponse {
+  int32 code = 2;
+  string message = 3;
+  optional AuthResponse data = 4;
+}
+
+message BasicResponse {
+  int32 code = 2;
+  string message = 3;
+}
+
+message TokenResponse {
+  int32 code = 2;
+  string message = 3;
+  optional TokenPair data = 4;
+}
+
+message GLogin {
+    string googleToken = 1
+}
+
+service AuthService {
+  rpc login(LoginUserDto) returns (LoginResponse);
+  rpc googleLogin(Glogin) returns (LoginResponse);
+  rpc register(CreateUserDto) returns (BasicResponse);
+  rpc logout(LogoutUserDto) returns (BasicResponse);
+  rpc verifyOtp(VerifyOtpDto) returns (BasicResponse);
+  rpc refreshToken(RefreshTokenDto) returns (TokenResponse);
+}

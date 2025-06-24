@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package chat;
+
+service ChatService {
+  rpc SendMessage (ChatMessage) returns (MessageResponse);
+  rpc GetChatHistory (ChatHistoryRequest) returns (ChatHistoryResponse);
+  rpc SubscribeToChat (ChatSubscriptionRequest) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+  string id = 1;
+  int32 sender_id = 2;
+  string sender_type = 3;
+  int32 receiver_id = 4;
+  string receiver_type = 5;
+  string content = 6;
+  optional string attachment_id = 7;
+  int64 timestamp = 8;
+}
+
+message MessageResponse {
+  string message_id = 1;
+  bool delivered = 2;
+  int64 timestamp = 3;
+}
+
+message ChatHistoryRequest {
+  int32 user_id = 1;
+  optional int32 other_id = 2;
+  optional string other_type = 3;
+  optional int32 limit = 4;
+  optional int64 before_timestamp = 5;
+}
+
+message ChatHistoryResponse {
+  repeated ChatMessage messages = 1;
+  bool has_more = 2;
+}
+
+message ChatSubscriptionRequest {
+  int32 user_id = 1;
+  optional int32 other_id = 2;
+  optional string other_type = 3;
+}

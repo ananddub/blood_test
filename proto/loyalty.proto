@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package loyalty;
+
+service LoyaltyService {
+  rpc AddLoyaltyPoints (AddLoyaltyPointsRequest) returns (LoyaltyPointsResponse);
+  rpc GetUserLoyaltyPoints (GetUserLoyaltyPointsRequest) returns (UserLoyaltyPoints);
+  rpc RedeemLoyaltyPoints (RedeemLoyaltyPointsRequest) returns (RedeemLoyaltyPointsResponse);
+  rpc GetLoyaltyHistory (GetLoyaltyHistoryRequest) returns (LoyaltyHistoryList);
+}
+
+message AddLoyaltyPointsRequest {
+  int32 user_id = 1;
+  int32 points = 2;
+  string source = 3;
+  optional int32 entity_id = 4;
+}
+
+message LoyaltyPointsResponse {
+  int32 transaction_id = 1;
+  int32 user_id = 2;
+  int32 points = 3;
+  int32 total_points = 4;
+}
+
+message GetUserLoyaltyPointsRequest {
+  int32 user_id = 1;
+}
+
+message UserLoyaltyPoints {
+  int32 user_id = 1;
+  int32 total_points = 2;
+  int32 redeemed_points = 3;
+  int32 available_points = 4;
+}
+
+message RedeemLoyaltyPointsRequest {
+  int32 user_id = 1;
+  int32 points = 2;
+  string purpose = 3; 
+  optional int32 entity_id = 4;
+}
+
+message RedeemLoyaltyPointsResponse {
+  int32 transaction_id = 1;
+  int32 user_id = 2;
+  int32 points_redeemed = 3;
+  int32 remaining_points = 4;
+  bool success = 5;
+}
+
+message GetLoyaltyHistoryRequest {
+  int32 user_id = 1;
+  optional string type = 2; 
+  optional int32 page = 3;
+  optional int32 limit = 4;
+}
+
+message LoyaltyHistoryList {
+  repeated LoyaltyTransaction transactions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message LoyaltyTransaction {
+  int32 id = 1;
+  string type = 2;
+  int32 points = 3;
+  string source = 4;
+  optional int32 entity_id = 5;
+  int64 created_at = 6;
+}

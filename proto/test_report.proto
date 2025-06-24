@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package testreport;
+
+service TestReportService {
+  rpc UploadTestReport (UploadTestReportRequest) returns (TestReportResponse);
+  rpc GetTestReport (GetTestReportRequest) returns (TestReportDetails);
+  rpc ListUserReports (ListUserReportsRequest) returns (UserReportsList);
+}
+
+message UploadTestReportRequest {
+  int32 test_id = 1;
+  repeated TestParameter parameters = 2;
+  string summary = 3;
+  string doctor_comments = 4;
+  repeated string image_ids = 5;
+}
+
+message TestParameter {
+  string name = 1;
+  string value = 2;
+  string unit = 3;
+  string reference_range = 4;
+  string status = 5;
+}
+
+message TestReportResponse {
+  int32 id = 1;
+  int32 test_id = 2;
+  string status = 3;
+  int64 created_at = 4;
+}
+
+message GetTestReportRequest {
+  int32 id = 1;
+}
+
+message TestReportDetails {
+  int32 id = 1;
+  int32 test_id = 2;
+  TestInfo test = 3;
+  repeated TestParameter parameters = 4;
+  string summary = 5;
+  string doctor_comments = 6;
+  repeated string image_urls = 7;
+  string status = 8;
+  int64 created_at = 9;
+}
+
+message TestInfo {
+  int32 id = 1;
+  string test_type = 2;
+  LabInfo lab = 3;
+}
+
+message LabInfo {
+  int32 id = 1;
+  string name = 2;
+}
+
+message ListUserReportsRequest {
+  int32 user_id = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message UserReportsList {
+  repeated ReportSummary reports = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message ReportSummary {
+  int32 id = 1;
+  int32 test_id = 2;
+  string test_type = 3;
+  string lab_name = 4;
+  string status = 5;
+  int64 created_at = 6;
+}

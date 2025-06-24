@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package lab;
+
+service LabService {
+  rpc RegisterLab (RegisterLabRequest) returns (LabResponse);
+  rpc FindNearbyLabs (FindNearbyLabsRequest) returns (NearbyLabsList);
+  rpc GetLabDetails (GetLabDetailsRequest) returns (LabDetails);
+  rpc UpdateLabDetails (UpdateLabDetailsRequest) returns (LabResponse);
+  rpc ListAllLabs (ListAllLabsRequest) returns (LabList);
+  rpc ApproveLab (ApproveLabRequest) returns (ApproveLabResponse);
+  
+  rpc StreamLabs (StreamLabsRequest) returns (stream LabSummary);
+  rpc WatchLabUpdates (WatchLabUpdatesRequest) returns (stream LabUpdateEvent);
+  rpc StreamNearbyLabs (StreamNearbyLabsRequest) returns (stream NearbyLab);
+}
+
+message RegisterLabRequest {
+  string name = 1;
+  string address = 2;
+  Coordinates coordinates = 3;
+  string license_number = 4;
+  OperatingHours operating_hours = 5;
+  repeated string test_types = 6;
+  repeated string certifications = 7;
+}
+
+message Coordinates {
+  double lat = 1;
+  double lon = 2;
+}
+
+message OperatingHours {
+  string mon = 1;
+  string tue = 2;
+  string wed = 3;
+  string thu = 4;
+  string fri = 5;
+  string sat = 6;
+  string sun = 7;
+}
+
+message LabResponse {
+  int32 id = 1;
+  string name = 2;
+  string address = 3;
+  bool is_approved = 4;
+}
+
+message FindNearbyLabsRequest {
+  double lat = 1;
+  double lon = 2;
+  double radius = 3;
+  optional string test_type = 4;
+  optional double min_rating = 5;
+}
+
+message NearbyLabsList {
+  repeated NearbyLab labs = 1;
+}
+
+message NearbyLab {
+  int32 id = 1;
+  string name = 2;
+  string address = 3;
+  Coordinates coordinates = 4;
+  repeated string test_types = 5;
+  double avg_rating = 6;
+  int32 total_reviews = 7;
+  double distance_km = 8;
+}
+
+message GetLabDetailsRequest {
+  int32 id = 1;
+}
+
+message LabDetails {
+  int32 id = 1;
+  string name = 2;
+  string address = 3;
+  Coordinates coordinates = 4;
+  repeated string test_types = 5;
+  repeated string certifications = 6;
+  OperatingHours operating_hours = 7;
+  double avg_rating = 8;
+  int32 total_reviews = 9;
+  bool is_approved = 10;
+}
+
+message UpdateLabDetailsRequest {
+  int32 id = 1;
+  optional string name = 2;
+  optional string address = 3;
+  optional Coordinates coordinates = 4;
+  optional OperatingHours operating_hours = 5;
+  repeated string test_types = 6;
+  repeated string certifications = 7;
+}
+
+message ListAllLabsRequest {
+  optional bool is_approved = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message LabList {
+  repeated LabSummary labs = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message LabSummary {
+  int32 id = 1;
+  string name = 2;
+  string address = 3;
+  bool is_approved = 4;
+}
+
+message ApproveLabRequest {
+  int32 id = 1;
+  bool is_approved = 2;
+}
+
+message ApproveLabResponse {
+  int32 id = 1;
+  bool is_approved = 2;
+}
+
+message StreamLabsRequest {
+  optional bool is_approved = 1;
+}
+
+message WatchLabUpdatesRequest {
+  optional int32 lab_id = 1;
+}
+
+message LabUpdateEvent {
+  enum EventType {
+    CREATED = 0;
+    UPDATED = 1;
+    DELETED = 2;
+    APPROVED = 3;
+    REJECTED = 4;
+  }
+  
+  EventType event_type = 1;
+  LabSummary lab = 2;
+  int64 timestamp = 3;
+}
+
+message StreamNearbyLabsRequest {
+  double lat = 1;
+  double lon = 2;
+  double radius = 3;
+  optional string test_type = 4;
+  optional double min_rating = 5;
+  bool watch_changes = 6;
+}

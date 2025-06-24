@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package notification;
+
+service NotificationService {
+  rpc SendNotification (SendNotificationRequest) returns (NotificationResponse);
+  rpc GetUserNotifications (GetUserNotificationsRequest) returns (UserNotificationsList);
+  rpc MarkNotificationAsRead (MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse);
+  
+  rpc SubscribeToNotifications (SubscribeRequest) returns (stream NotificationEvent);
+  rpc SubscribeToUserNotifications (UserSubscribeRequest) returns (stream NotificationEvent);
+  rpc BroadcastNotification (BroadcastRequest) returns (BroadcastResponse);
+}
+
+message SendNotificationRequest {
+  int32 user_id = 1;
+  string title = 2;
+  string message = 3;
+  string type = 4; 
+  optional string entity_type = 5; 
+  optional int32 entity_id = 6;
+}
+
+message NotificationResponse {
+  int32 id = 1;
+  int32 user_id = 2;
+  string title = 3;
+  string message = 4;
+  bool is_read = 5;
+  int64 created_at = 6;
+}
+
+message GetUserNotificationsRequest {
+  int32 user_id = 1;
+  optional bool is_read = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+}
+
+message UserNotificationsList {
+  repeated NotificationDetail notifications = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  int32 unread_count = 5;
+}
+
+message NotificationDetail {
+  int32 id = 1;
+  string title = 2;
+  string message = 3;
+  string type = 4;
+  optional string entity_type = 5;
+  optional int32 entity_id = 6;
+  bool is_read = 7;
+  int64 created_at = 8;
+}
+
+message MarkNotificationAsReadRequest {
+  int32 id = 1;
+  bool is_read = 2;
+}
+
+message MarkNotificationAsReadResponse {
+  int32 id = 1;
+  bool is_read = 2;
+}
+
+message SubscribeRequest {
+  repeated string topics = 1; 
+}
+
+message UserSubscribeRequest {
+  int32 user_id = 1;
+  repeated string topics = 2; 
+}
+
+message NotificationEvent {
+  string event_id = 1;
+  string topic = 2;
+  NotificationDetail notification = 3;
+  int64 timestamp = 4;
+}
+
+message BroadcastRequest {
+  string topic = 1;
+  string title = 2;
+  string message = 3;
+  optional string entity_type = 4;
+  optional int32 entity_id = 5;
+  repeated int32 target_user_ids = 6;
+}
+
+message BroadcastResponse {
+  string event_id = 1;
+  int32 recipients_count = 2;
+  bool success = 3;
+}

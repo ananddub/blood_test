@@ -1,0 +1,23 @@
+export enum RMQ_EVENT {
+    OTP_SENT = 'otp-sent',
+    NOTIFICATION_SENT = 'notification-sent',
+    PAYMENT_INITIATED = 'payment-initiated',
+    PAYMENT_COMPLETED = 'payment-completed',
+    PAYMENT_FAILED = 'payment-failed',
+    USER_REGISTERED_PENDING = 'user-registered-pending',
+    USER_VERIFIED = 'user-verified',
+    USER_UPDATED = 'user-updated',
+    USER_ROLLBACK = 'user-rollback',
+    LAB_REGISTERED = 'lab-registered',
+    LAB_APPROVED = 'lab-approved',
+    TEST_BOOKED = 'test-booked',
+    TEST_STATUS_UPDATED = 'test-status-updated',
+    TEST_CANCELLED = 'test-cancelled',
+    REPORT_UPLOADED = 'report-uploaded',
+    AUDIT_LOGGED = 'audit-logged',
+    REVIEW_SUBMITTED = 'review-submitted',
+    DOCUMENT_UPLOADED = 'document-uploaded',
+    PROMO_CREATED = 'promo-created',
+    CONFIG_UPDATED = 'config-updated',
+}
+export const RMQ_SERVICE_NAME = 'RMQ_SERVICE';

@@ -1,0 +1,289 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../libs/common/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String?   @unique
+  name          String
+  role          Role      @default(PATIENT)
+  language      String    @default("en")
+  address       String?
+  coordinates   Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+  phoneCode     String?   @default("+91")
+  lastLogin     DateTime?
+  loyaltyPoints Int       @default(0)
+  referralCode  String?   @unique
+  referredBy    String?
+
+  referredFrom  User?  @relation("Referrals", fields: [referredBy], references: [id], onDelete: Cascade)
+  referredUsers User[] @relation("Referrals")
+
+  bookings      BloodTest[]    @relation("PatientBookings")
+  lab           Lab?           @relation("LabAdmin")
+  deliveries    BloodTest[]    @relation("DeliveryAgent")
+  notifications Notification[] @relation("UserNotifications")
+  reviews       Review[]       @relation("UserReviews")
+  auditLogs     AuditLog[]     @relation("UserAuditLogs")
+  payments      Payment[]      @relation("UserPayments")
+  JWT           JWT[]          @relation("UserJWTs")
+
+  @@index([phone])
+  @@index([role])
+}
+
+model JWT {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation("UserJWTs", fields: [userId], references: [id], onDelete: Cascade)
+  jwt       String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  PATIENT
+  LAB_ADMIN
+  DELIVERY_AGENT
+  SUPER_ADMIN
+}
+
+model Lab {
+  id             String      @id @default(cuid())
+  name           String
+  address        String
+  coordinates    Json
+  licenseNumber  String      @unique
+  operatingHours Json?
+  testTypes      String[]
+  certifications String[]
+  isApproved     Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  adminId        String      @unique
+  admin          User?       @relation("LabAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  bookings       BloodTest[] @relation("LabBookings")
+  reviews        Review[]    @relation("LabReviews")
+  avgRating      Float?
+  totalReviews   Int         @default(0)
+  documents      Document[]  @relation("LabDocuments")
+
+  @@index([isApproved])
+  @@index([coordinates])
+}
+
+model BloodTest {
+  id        String @id @default(cuid())
+  patientId String
+  patient   User   @relation("PatientBookings", fields: [patientId], references: [id], onDelete: Cascade)
+
+  labId String
+  lab   Lab    @relation("LabBookings", fields: [labId], references: [id], onDelete: Cascade)
+
+  deliveryAgentId String?
+  deliveryAgent   User?   @relation("DeliveryAgent", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+
+  testType              String
+  packageName           String?
+  status                TestStatus @default(BOOKED)
+  bookingDate           DateTime
+  collectionDate        DateTime?
+  collectionAddress     String
+  collectionCoordinates Json?
+  deliveryDate          DateTime?
+  processedDate         DateTime?
+  report                Report?    @relation("TestReport")
+  payment               Payment?   @relation("TestPayment")
+
+  notifications Notification[] @relation("TestNotifications")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([labId])
+  @@index([deliveryAgentId])
+  @@index([status])
+  @@index([bookingDate])
+}
+
+enum TestStatus {
+  BOOKED
+  CONFIRMED
+  COLLECTED
+  IN_TRANSIT
+  RECEIVED
+  PROCESSED
+  REPORT_READY
+  CANCELLED
+}
+
+model Report {
+  id          String     @id @default(cuid())
+  bloodTestId String     @unique
+  test        BloodTest  @relation("TestReport", fields: [bloodTestId], references: [id], onDelete: Cascade)
+  s3Url       String
+  remarks     String?
+  results     Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  accessedBy  AuditLog[] @relation("ReportAccessLogs")
+
+  @@index([bloodTestId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation("UserPayments", fields: [userId], references: [id], onDelete: Cascade)
+  testId            String?       @unique
+  test              BloodTest?    @relation("TestPayment", fields: [testId], references: [id], onDelete: Cascade)
+  amount            Float
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  refundAmount      Float?
+  refundStatus      RefundStatus?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([testId])
+  @@index([status])
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSED
+  REJECTED
+}
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  bloodTestId String?
+  test        BloodTest?         @relation("TestNotifications", fields: [bloodTestId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  message     String
+  channel     ChannelType
+  status      NotificationStatus @default(PENDING)
+  createdAt   DateTime           @default(now())
+  sentAt      DateTime?
+  error       String?
+
+  @@index([userId])
+  @@index([bloodTestId])
+  @@index([status])
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  SAMPLE_COLLECTED
+  REPORT_READY
+  REMINDER
+  PROMO
+}
+
+enum ChannelType {
+  PUSH
+  SMS
+  EMAIL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  labId     String
+  lab       Lab      @relation("LabReviews", fields: [labId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([labId])
+  @@index([rating])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  labId     String
+  lab       Lab      @relation("LabDocuments", fields: [labId], references: [id], onDelete: Cascade)
+  name      String
+  s3Url     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([labId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
+  reportId  String?
+  report    Report?  @relation("ReportAccessLogs", fields: [reportId], references: [id], onDelete: Cascade)
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([reportId])
+  @@index([action])
+}
+
+model PromoCode {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  discount   Float
+  maxUses    Int?
+  usedCount  Int      @default(0)
+  validFrom  DateTime
+  validUntil DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([code])
+}
+
+model Configuration {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
